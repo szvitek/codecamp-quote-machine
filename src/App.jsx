@@ -1,45 +1,60 @@
-import { useState } from 'react'
-import logo from './logo.svg'
-import './App.css'
+import { Component } from "react";
+import LoaderComponent from "./components/Loader";
+import QuoteComponent from "./components/Quote";
+import "bootswatch/dist/superhero/bootstrap.min.css";
+import "./App.css";
 
-function App() {
-  const [count, setCount] = useState(0)
+class App extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      quotes: [],
+      quoteIndex: null,
+    };
+  }
 
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>Hello Vite + React!</p>
-        <p>
-          <button type="button" onClick={() => setCount((count) => count + 1)}>
-            count is: {count}
-          </button>
-        </p>
-        <p>
-          Edit <code>App.jsx</code> and save to test HMR updates.
-        </p>
-        <p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-          {' | '}
-          <a
-            className="App-link"
-            href="https://vitejs.dev/guide/features.html"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Vite Docs
-          </a>
-        </p>
-      </header>
-    </div>
-  )
+  async componentDidMount() {
+    const url = "https://type.fit/api/quotes";
+    const response = await fetch(url);
+    const quotes = await response.json();
+    const quoteIndex = this.generateRandomIndex(quotes);
+
+    this.setState({
+      quotes,
+      quoteIndex,
+    });
+  }
+
+  generateRandomIndex = (quotes = this.state.quotes) => {
+    const maxIndex = quotes?.length || 50;
+    const rnd = Math.floor(Math.random() * maxIndex);
+    return rnd;
+  };
+
+  generateRandomQuote = () => {
+    const quoteIndex = this.generateRandomIndex();
+
+    this.setState({
+      quoteIndex,
+    });
+  };
+
+  render() {
+    const isLoading = !this.state.quotes || !this.state.quoteIndex;
+
+    return (
+      <div className="App">
+        {isLoading ? (
+          <LoaderComponent />
+        ) : (
+          <QuoteComponent
+            quote={this.state.quotes[this.state.quoteIndex]}
+            generateRandomQuote={() => this.generateRandomQuote()}
+          />
+        )}
+      </div>
+    );
+  }
 }
 
-export default App
+export default App;
