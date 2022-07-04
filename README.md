@@ -5,7 +5,7 @@
 This project is part of freeCodeCamp's frontend libraries curriculum.
 
 ## Todo
-- [ ] Refactor App into fuction component and use hooks
+- [x] Refactor App into fuction component and use hooks
 
 ## User stories:
 

@@ -1,60 +1,59 @@
-import { Component } from "react";
+import { useEffect, useState } from "react";
 import LoaderComponent from "./components/Loader";
 import QuoteComponent from "./components/Quote";
 import "bootswatch/dist/superhero/bootstrap.min.css";
 import "./App.css";
 
-class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      quotes: [],
-      quoteIndex: null,
-    };
-  }
+const fetchData = async () => {
+  const url = "https://type.fit/api/quotes";
+  const response = await fetch(url);
+  return response.json();
+};
 
-  async componentDidMount() {
-    const url = "https://type.fit/api/quotes";
-    const response = await fetch(url);
-    const quotes = await response.json();
-    const quoteIndex = this.generateRandomIndex(quotes);
+const App = (props) => {
+  const [quotes, setQuotes] = useState([]);
+  const [quoteIndex, setQuoteIndex] = useState(null);
 
-    this.setState({
-      quotes,
-      quoteIndex,
+  /**
+   * use mounted to prevent memory leaks and errors
+   * https://www.digitalocean.com/community/tutorials/how-to-handle-async-data-loading-lazy-loading-and-code-splitting-with-react#step-2-preventing-errors-on-unmounted-components
+   */
+  useEffect(() => {
+    let mounted = true;
+    fetchData().then((quotes) => {
+      if (mounted) {
+        setQuotes(quotes);
+      }
     });
-  }
+    return () => (mounted = false);
+  }, []);
 
-  generateRandomIndex = (quotes = this.state.quotes) => {
+  useEffect(() => {
+    let mounted = true;
+    if (mounted && quotes.length) {
+      generateRandomQuote();
+    }
+    return () => (mounted = false);
+  }, [quotes]);
+
+  const generateRandomQuote = () => {
     const maxIndex = quotes?.length || 50;
-    const rnd = Math.floor(Math.random() * maxIndex);
-    return rnd;
+    const quoteIndex = Math.floor(Math.random() * maxIndex);
+    setQuoteIndex(quoteIndex);
   };
 
-  generateRandomQuote = () => {
-    const quoteIndex = this.generateRandomIndex();
-
-    this.setState({
-      quoteIndex,
-    });
-  };
-
-  render() {
-    const isLoading = !this.state.quotes || !this.state.quoteIndex;
-
-    return (
-      <div className="App">
-        {isLoading ? (
-          <LoaderComponent />
-        ) : (
-          <QuoteComponent
-            quote={this.state.quotes[this.state.quoteIndex]}
-            generateRandomQuote={() => this.generateRandomQuote()}
-          />
-        )}
-      </div>
-    );
-  }
-}
+  return (
+    <div className="App">
+      {!quotes || !quoteIndex ? (
+        <LoaderComponent />
+      ) : (
+        <QuoteComponent
+          quote={quotes[quoteIndex]}
+          generateRandomQuote={generateRandomQuote}
+        />
+      )}
+    </div>
+  );
+};
 
 export default App;
